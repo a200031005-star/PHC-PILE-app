@@ -42,6 +42,23 @@ html,body{font-family:var(--font);background:var(--bg);color:var(--text);width:1
 .eq-section-body{display:none;margin-top:14px;}
 .eq-section.open .eq-section-body{display:block;}
 .eq-row-2 .eq-row label{min-height:34px;display:flex;align-items:flex-end;line-height:1.35;}
+
+/* ── 매뉴얼 모달 ── */
+.eq-modal-overlay{display:none;position:fixed;inset:0;background:rgba(13,46,15,.55);z-index:100;padding:24px 14px;overflow-y:auto;}
+.eq-modal-overlay.open{display:block;}
+.eq-modal{background:#fff;max-width:560px;margin:0 auto;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.25);overflow:hidden;}
+.eq-modal-header{background:var(--green-dark);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;}
+.eq-modal-header h2{color:#fff;font-size:16px;font-weight:800;margin:0;}
+.eq-modal-close{background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;width:30px;height:30px;font-size:16px;cursor:pointer;line-height:1;}
+.eq-modal-body{padding:18px;max-height:75vh;overflow-y:auto;}
+.manual-sec{margin-bottom:18px;}
+.manual-sec:last-child{margin-bottom:0;}
+.manual-sec h3{font-size:13.5px;font-weight:800;color:var(--green-dark);margin:0 0 6px;display:flex;align-items:center;gap:6px;}
+.manual-sec p{font-size:12.5px;color:var(--text-sub);line-height:1.65;margin:0 0 6px;}
+.manual-sec ul{margin:0 0 6px;padding-left:18px;}
+.manual-sec li{font-size:12.5px;color:var(--text-sub);line-height:1.65;margin-bottom:3px;}
+.manual-note{font-size:11.5px;color:#A14B00;background:#FFF3E0;border-radius:8px;padding:8px 10px;line-height:1.6;margin-top:6px;}
+.manual-code{background:var(--green-card);border:1px solid var(--green-pale);border-radius:6px;padding:1px 6px;font-size:11.5px;color:var(--green-dark);}
 .eq-section-desc{font-size:11.5px;color:var(--hint);line-height:1.6;margin-bottom:14px;}
 
 /* ── 입력행 (eq-row / eq-input 그대로) ── */
@@ -92,6 +109,7 @@ table.eq-table tr.exceed td{background:#fde8e8;}
     <div class="eq-page-title">PHC 파일 좌표 관리</div>
     <div class="eq-page-sub">설계 → 진행 → 실측 정합성 확인 · Outsmart for Quiet</div>
   </div>
+  <button class="eq-spec-btn" id="manualBtn">사용 매뉴얼</button>
 </div>
 
 <div class="eq-wrap">
@@ -216,6 +234,68 @@ table.eq-table tr.exceed td{background:#fde8e8;}
     </div>
   </div>
 
+</div>
+
+<div class="eq-modal-overlay" id="manualOverlay">
+  <div class="eq-modal">
+    <div class="eq-modal-header">
+      <h2>PHC 파일 좌표 관리 — 사용 매뉴얼</h2>
+      <button class="eq-modal-close" id="manualCloseBtn">&times;</button>
+    </div>
+    <div class="eq-modal-body">
+
+      <div class="manual-sec">
+        <h3>0. 설계(시공 전) 전체 좌표 등록 — 최초 1회</h3>
+        <p>모든 매칭의 기준이 되는 파일번호(관리번호)와 설계 좌표를 등록합니다.</p>
+        <ul>
+          <li><b>엑셀로 등록</b>: 열 이름에 <span class="manual-code">번호</span>(또는 관리번호), <span class="manual-code">X</span>, <span class="manual-code">Y</span>(선택 <span class="manual-code">Z</span>)가 있으면 자동 인식됩니다.</li>
+          <li><b>DXF로 등록</b>: 기존 설계 도면을 그대로 올리면, 점(POINT) 옆에 붙은 관리번호 텍스트를 자동으로 찾아 매칭합니다. 라벨을 못 찾은 점은 임시번호(PT_1, PT_2…)로 등록되니, 등록 후 요약(라벨 인식/미인식 개수)을 꼭 확인하세요.</li>
+          <li>DXF로 등록하면 원본 도면이 브라우저에 저장되어, 5단계에서 마스터 DXF를 만들 때 그 위에 겹쳐서 생성합니다.</li>
+          <li>다시 등록하면 기존 설계 데이터를 덮어씁니다. 이전에 이 도구로 만든 마스터 DXF를 재등록해도, 진행/미시공 레이어는 자동으로 걸러내고 원본 설계 점만 사용합니다.</li>
+        </ul>
+        <div class="manual-note">주의: 엑셀의 X열은 북쪽(N), Y열은 동쪽(E)이라는 측량 관례에 맞춰, 등록 시 자동으로 CAD 좌표(X=동서, Y=남북)로 바꿔 저장합니다.</div>
+      </div>
+
+      <div class="manual-sec">
+        <h3>1. 일자별 시공완료 등록 — 진행현황용</h3>
+        <p>매일 시공이 끝난 파일(말뚝)을 날짜별로 등록해 진행률을 관리합니다. 세 가지 엑셀 형식을 자동으로 구분해서 처리합니다.</p>
+        <ul>
+          <li><b>좌표 포함 엑셀</b>(번호·X·Y): 설계 매칭 여부와 상관없이 엑셀에 적힌 좌표를 그대로 등록합니다.</li>
+          <li><b>번호만 있는 엑셀</b>: 설계 전체(0단계)에서 좌표를 찾아 참조합니다.</li>
+          <li><b>PDAM 항타기록부</b>: 파일을 그대로 올리면 자동 인식됩니다. "파일번호"와 "시공일"을 읽어 날짜별로 자동 분류하므로, 이 경우 아래 일자 선택은 무시됩니다. 좌표는 저장하지 않고 파일번호만 저장하며, 마스터 DXF 생성 시점에 설계 좌표를 그때그때 참조합니다(설계 좌표가 나중에 바뀌어도 자동 반영).</li>
+        </ul>
+      </div>
+
+      <div class="manual-sec">
+        <h3>2. 최종 실측(As-Built) 좌표 등록 — 준공측량</h3>
+        <p>실제 시공 위치의 측량값을 설계 좌표와 별도로 저장합니다(설계 좌표를 덮어쓰지 않음). 같은 번호로 다시 등록하면 그 항목만 최신값으로 갱신됩니다. "삭제" 버튼으로 실측 데이터만 따로 지울 수 있습니다.</p>
+      </div>
+
+      <div class="manual-sec">
+        <h3>3. 진행 현황</h3>
+        <p>전체/진행등록/미시공/실측등록 수량이 자동 집계됩니다. 날짜별 등록 목록에서 개별 삭제도 가능합니다.</p>
+      </div>
+
+      <div class="manual-sec">
+        <h3>4. 실시공 정합성(위치오차) 확인</h3>
+        <p>설계 좌표와 실측 좌표의 차이(오차거리)를 자동 계산합니다. 허용 오차(기본 0.15 = 15cm, 좌표 단위와 동일하게 입력)를 초과한 항목만 목록에 표시됩니다.</p>
+      </div>
+
+      <div class="manual-sec">
+        <h3>5. 마스터 DXF 생성 및 공유</h3>
+        <p>등록된 모든 데이터를 하나의 DXF로 합쳐서 다운로드합니다.</p>
+        <ul>
+          <li><span class="manual-code">00_DESIGN</span> 회색 — 설계 전체(엑셀로 등록한 경우에만 생성. DXF로 등록했다면 원본 도면 자체가 이 역할을 합니다)</li>
+          <li><span class="manual-code">D_YYYY-MM-DD</span> 색상별 — 일자별 진행. 점 아래에 짧은 날짜(예: 26-07-29)만 작게 표시됩니다.</li>
+          <li><span class="manual-code">AS_ASBUILT</span> 청록 — 실측 좌표. <span class="manual-code">AS_EXCEED</span> 주황 — 허용오차 초과분. <span class="manual-code">AS_VECTOR</span> — 설계점→실측점 오차 벡터선.</li>
+          <li><span class="manual-code">99_REMAIN</span> 빨강 — 아직 미시공인 설계 점(번호 텍스트는 만들지 않고 점만 표시해 원본 라벨과 겹치지 않습니다).</li>
+          <li>"전체 데이터 백업(JSON)" / "불러오기"로 다른 기기와 데이터를 주고받을 수 있습니다. 단, DXF 원본 도면(0단계에서 DXF로 등록한 경우)은 용량 문제로 JSON 백업에 포함되지 않으니, 다른 기기에서는 원본 DXF를 다시 첨부해주세요.</li>
+        </ul>
+        <div class="manual-note">최신 AutoCAD 포맷(R13 이상) 도면에 병합할 때는 핸들·소속정보를 자동으로 부여해 정상적으로 열리도록 처리합니다.</div>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1289,6 +1369,15 @@ table.eq-table tr.exceed td{background:#fde8e8;}
     header.addEventListener("click", function(){
       header.closest(".eq-section").classList.toggle("open");
     });
+  });
+
+  const manualBtn = document.getElementById("manualBtn");
+  const manualOverlay = document.getElementById("manualOverlay");
+  const manualCloseBtn = document.getElementById("manualCloseBtn");
+  manualBtn.addEventListener("click", function(){ manualOverlay.classList.add("open"); });
+  manualCloseBtn.addEventListener("click", function(){ manualOverlay.classList.remove("open"); });
+  manualOverlay.addEventListener("click", function(e){
+    if(e.target === manualOverlay) manualOverlay.classList.remove("open");
   });
 
   renderAll();
